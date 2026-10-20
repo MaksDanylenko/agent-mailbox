@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "agent-mailbox",
+  "version": "0.1.0",
+  "description": "A local SQLite mailbox and coordination skills for Codex and Claude Code.",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Agent Mailbox",
+        "shortDescription": "Local messages between coding agent sessions"
+      }
+    }
+  },
+  "author": {
+    "name": "Agent Mailbox contributors"
+  }
+}

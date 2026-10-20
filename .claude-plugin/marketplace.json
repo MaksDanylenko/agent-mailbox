@@ -1,0 +1,13 @@
+{
+  "name": "agent-mailbox-local",
+  "owner": {
+    "name": "Agent Mailbox contributors"
+  },
+  "plugins": [
+    {
+      "name": "agent-mailbox",
+      "source": "./"
+    }
+  ],
+  "description": "Local coordination skills and CLI for coding agent sessions."
+}
