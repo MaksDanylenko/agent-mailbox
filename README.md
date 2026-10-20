@@ -1,14 +1,25 @@
-# Agent Mailbox
+# Agent Mailbox: messaging plugin for Codex and Claude Code
 
-A local mailbox for Codex and Claude Code sessions: one SQLite database, one Python CLI, and skills for leaders and teammates. Agents exchange tasks, questions, answers, and results without MCP or a hosted service.
+[![CI](https://github.com/MaksDanylenko/agent-mailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MaksDanylenko/agent-mailbox/actions/workflows/ci.yml) · [MIT license](LICENSE) · Python 3.10+
 
-Multiple leaders can work on independent tasks using different runs in the same database. Each session has its own address. The CLI handles parameterized SQL, delivery leases, retries, and JSON output; agents supply addresses and message text.
+Agent Mailbox is an open-source plugin for local agent-to-agent messaging between **Codex and Claude Code**. A shared SQLite mailbox, Python CLI, and coordination skills let sessions exchange tasks, questions, answers, and results on the same computer.
+
+Keep your conversation with a team lead while teammates use addressed inboxes to ask questions and return work. Either product can be the lead. No MCP server or hosted mailbox service is required; agents receive messages when they check their inbox.
+
+[Quickstart](#quickstart) · [Install the plugin](#install-the-skills) · [Start a team](#start-a-team) · [CLI reference](#cli-reference) · [FAQ](#frequently-asked-questions) · [Architecture](docs/architecture.md)
+
+## What you can use it for
+
+- **Coordinate Codex and Claude Code teammates:** delegate a task, route a question to the human through the lead, and return the answer in the same conversation thread.
+- **Run independent teams:** give each top-level task its own run and lead in one database. Every session has its own address; run boundaries keep mailbox queries separate.
+- **Continue long tasks:** give a replacement session a newly addressed assignment with the original task reference and a versioned checkpoint. See [session replacement](#replace-a-session-from-a-checkpoint).
+- **Recover unacknowledged messages:** retry sends with stable keys and reclaim delivery after a lease expires. See [retry and recovery](#retry-and-recovery) for the limits.
 
 ## Requirements
 
 Python 3.10 or newer, Git, and a local filesystem. The runtime has no third-party Python dependencies. Both agent processes must be able to read/write the selected database and access the CLI. Plugin installation does not install Python or start agents.
 
-## Get the CLI
+## Quickstart
 
 ```sh
 git clone https://github.com/MaksDanylenko/agent-mailbox.git
@@ -17,13 +28,21 @@ python3 --version
 ./bin/agent-mailbox --help
 ```
 
+Try the local messaging demo from the checkout:
+
+```sh
+python3 scripts/demo.py
+```
+
+It sends a task, receipt, question, simulated human answer, and result through the real CLI. It makes no model calls and does not launch Codex or Claude agents. To connect your own sessions, [install the skills](#install-the-skills), then [create a run and send a task](#start-a-team).
+
 Keep this checkout at a stable location and pass its absolute `bin/agent-mailbox` path to agents. No pip install is required. If an archive or plugin cache loses executable permissions, invoke it as `python3 /absolute/path/agent-mailbox/bin/agent-mailbox`; the Git checkout preserves its executable bit.
 
 ## Install the skills
 
 Codex and Claude Code use the same skills and core with their own package metadata. Installation commands below refer to the checkout directory. Use current native CLI versions with plugin support; start a new session after installation.
 
-Codex:
+### Codex plugin
 
 ```sh
 codex plugin marketplace add /absolute/path/agent-mailbox
@@ -32,7 +51,7 @@ codex plugin add agent-mailbox@agent-mailbox-local
 
 Then invoke `$mailbox-setup`, `$mailbox-lead`, or `$mailbox-teammate` from the installed plugin's skill picker. If the host displays a namespaced name, use that displayed name.
 
-Claude Code:
+### Claude Code plugin
 
 ```sh
 claude plugin marketplace add /absolute/path/agent-mailbox
@@ -106,14 +125,6 @@ MESSAGE
 
 An ack means the task message was accepted. It is not a finished task. Send questions and results separately with `reply --type question` and `reply --type result`, their own stable send keys, and the current addressed assignment ID (`task_message_id`). The leader claims and acknowledges a question, asks the human in its current chat, and sends `reply --type answer --reply-to QUESTION_ID` to the teammate. Both sides preserve the thread automatically.
 
-A ready-to-run simulated conversation is available without model calls:
-
-```sh
-python3 scripts/demo.py
-```
-
-This exercises the real CLI as two addressed participants; it does not launch live Codex or Claude agents.
-
 ## CLI reference
 
 All mailbox commands require `--db ABSOLUTE_PATH --run RUN_ID --as AGENT_ID` before the command. `--help` and `--version` are human-readable exceptions; other success and error output is one JSON object on stdout.
@@ -175,6 +186,36 @@ In the successor's startup packet set `task_message_id` to this send's returned 
 The mailbox does not launch or wake agents, inject messages into arbitrary open applications, or make a Claude process a native Codex teammate. Agents receive mail only while actively checking it. Use bounded `wait` calls within the current task's agreed budget. Completed sessions need another prompt or separate launcher integration.
 
 Local identities and run boundaries are logical safeguards, not authentication. Any process with direct file access can read or change the database. Use a local disk, not a network filesystem. Neither skills nor startup artifact lists enforce operating-system permissions.
+
+## Frequently asked questions
+
+### Can Codex and Claude Code send messages to each other?
+
+Yes, through this local CLI and a database both sessions can access. The skills describe when to send, read, claim, acknowledge, and reply. This is shared-inbox coordination, not native membership in the other product's agent team. It does not inject messages into arbitrary open application windows.
+
+### Can I run more than one team lead?
+
+Yes. Use a different `run_id` for each independent task, with one lead and its teammate memberships in each run. The same session can join several runs, but that does not give it separate contexts. See the [schema and routing contract](docs/design.md#identity-and-schema).
+
+### Do I need MCP or an additional model API key?
+
+The mailbox itself uses neither MCP nor a model API. Its Python runtime has no third-party dependencies. Codex and Claude Code keep their own authentication and usage requirements; this plugin does not replace either product.
+
+### Will messages wake an idle agent or resume a crashed task?
+
+No. An active recipient must check its inbox or use a bounded wait. A message claimed but not acknowledged becomes available when its lease expires. After an assignment is accepted, the lead coordinates any unfinished task recovery. See [delivery recovery](#retry-and-recovery) and [session replacement from a checkpoint](#replace-a-session-from-a-checkpoint).
+
+### Does acknowledgement mean the task is complete?
+
+No. `ack` confirms message acceptance. The teammate sends a separate `result` message with its work and evidence. Repeated delivery is possible, so external actions are not guaranteed to happen exactly once.
+
+## Documentation and support
+
+- [Architecture and message delivery](docs/architecture.md): components, tables, logical boundaries, and tasks that outlive sessions.
+- [CLI contract and delivery semantics](docs/design.md#complete-cli-contract): command arguments, JSON fields, exit codes, leases, and retry rules.
+- [First teammate startup packet](examples/startup-teammate.json) and [replacement session packet](examples/startup-successor.json): paths, addresses, current assignment, and original task references.
+- [Setup skill](skills/mailbox-setup/SKILL.md), [lead skill](skills/mailbox-lead/SKILL.md), and [teammate skill](skills/mailbox-teammate/SKILL.md): workflows bundled in the plugin.
+- [Report a bug or ask a usage question](https://github.com/MaksDanylenko/agent-mailbox/issues). Include the CLI version and a minimal example without private task content.
 
 ## Development
 
