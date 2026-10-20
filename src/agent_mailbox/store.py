@@ -88,9 +88,6 @@ class Store:
             # Inspect before even journal-mode setup: unknown schemas stay untouched.
             if version not in (0, 1) or (version == 0 and not create):
                 raise Failure(1, "storage_error", "Unsupported database schema version.")
-            if version == 0 and self.db.execute(
-                    "SELECT 1 FROM sqlite_master WHERE type='table' LIMIT 1").fetchone():
-                raise Failure(1, "storage_error", "Unrecognized database schema.")
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA synchronous=FULL")
             if create:
@@ -137,6 +134,9 @@ class Store:
             # Another process may have initialized while we awaited the writer lock.
             version = self.db.execute("PRAGMA user_version").fetchone()[0]
             if version == 0:
+                if self.db.execute(
+                        "SELECT 1 FROM sqlite_master WHERE type='table' LIMIT 1").fetchone():
+                    raise Failure(1, "storage_error", "Unrecognized database schema.")
                 for statement in SCHEMA:
                     self.db.execute(statement)
                 self.db.execute("PRAGMA user_version=1")
