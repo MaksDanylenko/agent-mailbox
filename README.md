@@ -127,7 +127,7 @@ An ack means the task message was accepted. It is not a finished task. Send ques
 
 ## CLI reference
 
-All mailbox commands require `--db ABSOLUTE_PATH --run RUN_ID --as AGENT_ID` before the command. `--help` and `--version` are human-readable exceptions; other success and error output is one JSON object on stdout.
+All mailbox commands require `--db ABSOLUTE_PATH --run RUN_ID --as AGENT_ID` before the command. `--help` and `--version` are human-readable exceptions; other success and error output is one JSON object on stdout, encoded as UTF-8 with non-ASCII text unescaped.
 
 | Command | Options / result |
 |---|---|
@@ -139,7 +139,7 @@ All mailbox commands require `--db ABSOLUTE_PATH --run RUN_ID --as AGENT_ID` bef
 | `claim` | `[--id ID] [--lease-seconds 1..3600]`; `data.message`, default lease 120 seconds |
 | `ack` | `--id ID --lease-token TOKEN`; confirms incoming message acceptance |
 | `status` | `[--id ID]`; incoming counts, or an accessible incoming/outgoing message |
-| `wait` | `--timeout 1..30`; available message without claiming, or timeout |
+| `wait` | `--timeout 1..30` seconds; available message without claiming, or timeout (exit 5). Repeat for longer waits |
 
 Types: `task`, `message`, `question`, `answer`, `result`. Self-messages are allowed. A reply can only refer to mail addressed to the caller; its `--to` must equal the parent's sender. Inbox and wait never acknowledge or reserve messages.
 
@@ -183,7 +183,7 @@ In the successor's startup packet set `task_message_id` to this send's returned 
 
 ## Limits
 
-The mailbox does not launch or wake agents, inject messages into arbitrary open applications, or make a Claude process a native Codex teammate. Agents receive mail only while actively checking it. Use bounded `wait` calls within the current task's agreed budget. Completed sessions need another prompt or separate launcher integration.
+The mailbox does not launch or wake agents, inject messages into arbitrary open applications, or make a Claude process a native Codex teammate. Agents receive mail only while actively checking it. Use bounded `wait` calls (at most 30 seconds each) within the current task's agreed budget; for a longer budget, repeat them in a loop that stops on a message or at the budget. Completed sessions need another prompt or separate launcher integration.
 
 Local identities and run boundaries are logical safeguards, not authentication. Any process with direct file access can read or change the database. Use a local disk, not a network filesystem. Neither skills nor startup artifact lists enforce operating-system permissions.
 

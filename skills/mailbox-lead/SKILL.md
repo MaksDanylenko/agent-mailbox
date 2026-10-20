@@ -15,7 +15,7 @@ Record returned task ID and thread ID. Give the teammate its first prompt throug
 
 ## Receive and route
 
-Use `inbox`, then `claim --id MESSAGE_ID`; alternatively `wait --timeout 20` signals availability without reserving it. Read the claim's current lease token. After accepting or routing the message, `ack --id MESSAGE_ID --lease-token TOKEN`. Default lease is 120 seconds for delivery processing, not an entire task or human conversation. Acknowledge a question after routing it to your chat, before waiting on the human.
+Use `inbox`, then `claim --id MESSAGE_ID`; alternatively `wait --timeout 20` signals availability without reserving it. `--timeout` accepts integer seconds 1..30; a larger value is rejected with exit 2, so cover a longer budget by repeating short waits. Read the claim's current lease token. After accepting or routing the message, `ack --id MESSAGE_ID --lease-token TOKEN`. Default lease is 120 seconds for delivery processing, not an entire task or human conversation. Acknowledge a question after routing it to your chat, before waiting on the human.
 
 Present product questions in your current human conversation. Return the person's actual answer to the question sender with its ID as parent. Bind `QUESTION_ID`, `TEAMMATE_ID`, and `SEND_KEY` from that message and this logical response:
 
