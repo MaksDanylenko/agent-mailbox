@@ -1,0 +1,21 @@
+{
+  "mailbox_cli": "/absolute/path/agent-mailbox/bin/agent-mailbox",
+  "mailbox_db": "/absolute/path/team-state/mailbox.db",
+  "run_id": "website-review",
+  "agent_id": "claude-session-99",
+  "lead_id": "codex-session-17",
+  "task_message_id": "NEW_ASSIGNMENT_MESSAGE_ID",
+  "thread_id": "ORIGINAL_THREAD_ID",
+  "skill_path": "/absolute/path/agent-mailbox/skills/mailbox-teammate/SKILL.md",
+  "task_refs": [
+    "/absolute/path/work/task-brief.md"
+  ],
+  "allowed_artifacts": [
+    "/absolute/path/work"
+  ],
+  "checkpoint": {
+    "path": "/absolute/path/work/checkpoints/checkpoint-0002.md",
+    "version": 2
+  },
+  "original_task_message_id": "ORIGINAL_TASK_MESSAGE_ID"
+}

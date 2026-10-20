@@ -1,0 +1,9 @@
+{
+  "name": "agent-mailbox",
+  "version": "0.1.0",
+  "description": "A local SQLite mailbox and coordination skills for Codex and Claude Code.",
+  "license": "MIT",
+  "author": {
+    "name": "Agent Mailbox contributors"
+  }
+}

@@ -36,7 +36,7 @@
 - `tests/test_cli.py`, `tests/test_delivery.py`: independent black-box tests using subprocesses and temporary directories.
 - `plugin.json`, `.claude-plugin/plugin.json`: native metadata, no fabricated manifest fields.
 - `skills/mailbox-setup/SKILL.md`, `skills/mailbox-lead/SKILL.md`, `skills/mailbox-teammate/SKILL.md`: host setup, routing, delivery, checkpoints.
-- `README.md`, `LICENSE`, `.gitignore`, `docs/architecture.md`, `docs/startup-packet.example.json`: public project documentation and generic examples.
+- `README.md`, `LICENSE`, `.gitignore`, `docs/architecture.md`, `examples/startup-teammate.json`, `examples/startup-successor.json`: public project documentation and generic examples.
 - `scripts/demo.py`, `scripts/check_package.py`, `.github/workflows/ci.yml`: executable demo, local packaging check, CI.
 
 ### Task 1: Durable CLI and independently tested delivery contract
