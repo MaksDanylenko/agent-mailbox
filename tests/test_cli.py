@@ -227,6 +227,46 @@ class MailboxCLI(unittest.TestCase):
         self.assertEqual(message["body"], body)
         self.assertEqual(self.claim()["body"], body)
 
+    def test_non_ascii_output_is_unescaped_utf8_json(self):
+        body = "Привіт, командо! Ґанок і їжак ✓\n"
+        result = subprocess.run(self.argv("send", "--to", "mate", "--type", "task", "--send-key", "uk"),
+                                input=body.encode("utf-8"), capture_output=True, timeout=12)
+        stdout = result.stdout.decode("utf-8")
+        self.assertIn("Привіт, командо! Ґанок і їжак ✓", stdout)
+        self.assertNotIn("\\u04", stdout)
+        message = self.decode(subprocess.CompletedProcess(result.args, result.returncode, stdout, ""))
+        self.assertEqual(message["data"]["message"]["body"], body)
+        self.assertEqual(self.claim()["body"], body)
+
+    def test_output_is_utf8_under_ascii_locale_and_io_encoding(self):
+        body = "Український текст"
+        env = {**os.environ, "LANG": "C", "LC_ALL": "C", "PYTHONIOENCODING": "ascii",
+               "PYTHONUTF8": "0"}
+        for args in (("send", "--to", "mate", "--type", "task", "--send-key", "ascii-env"),
+                     ("send", "--to", "missing", "--type", "task", "--send-key", "ascii-env-2")):
+            with self.subTest(args=args):
+                result = subprocess.run(self.argv(*args), input=body.encode("utf-8"), env=env,
+                                        capture_output=True, timeout=12)
+                self.assertNotIn(b"UnicodeEncodeError", result.stderr)
+                envelope = json.loads(result.stdout.decode("utf-8"))
+                if envelope["ok"]:
+                    self.assertEqual(envelope["data"]["message"]["body"], body)
+                    self.assertIn(body.encode("utf-8"), result.stdout)
+                else:
+                    self.assertEqual(result.returncode, 3)
+
+    def test_bounded_options_show_units_and_ranges_in_help(self):
+        for command, expected in (("wait", ("--timeout SECONDS", "1..30", "repeat wait")),
+                                  ("claim", ("--lease-seconds SECONDS", "1..3600", "default: 120")),
+                                  ("inbox", ("1..100", "default: 20"))):
+            with self.subTest(command=command):
+                result = subprocess.run(self.argv(command, "--help"), text=True,
+                                        capture_output=True, timeout=12)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                help_text = " ".join(result.stdout.split())
+                for text in expected:
+                    self.assertIn(text, help_text)
+
     def test_body_file_preserves_exact_text(self):
         body = "Apostrophe ' and\nmultiple lines\n"
         path = Path(self.temp.name) / "body with spaces.txt"

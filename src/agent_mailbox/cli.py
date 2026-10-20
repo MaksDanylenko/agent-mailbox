@@ -58,17 +58,20 @@ def parser():
         else:
             send.add_argument("--reply-to", required=True, type=nonempty)
     inbox = commands.add_parser("inbox", help="list available incoming messages", allow_abbrev=False)
-    inbox.add_argument("--limit", type=bounded(1, 100), default=20)
+    inbox.add_argument("--limit", type=bounded(1, 100), default=20, metavar="N",
+                       help="maximum messages, integer 1..100 (default: 20)")
     claim = commands.add_parser("claim", help="lease one incoming message", allow_abbrev=False)
     claim.add_argument("--id", type=nonempty)
-    claim.add_argument("--lease-seconds", type=bounded(1, 3600), default=120)
+    claim.add_argument("--lease-seconds", type=bounded(1, 3600), default=120, metavar="SECONDS",
+                       help="integer 1..3600 (default: 120)")
     ack = commands.add_parser("ack", help="acknowledge delivery using its current lease token", allow_abbrev=False)
     ack.add_argument("--id", required=True, type=nonempty)
     ack.add_argument("--lease-token", required=True, type=nonempty)
     status = commands.add_parser("status", help="read an addressed message or incoming counts", allow_abbrev=False)
     status.add_argument("--id", type=nonempty)
     wait = commands.add_parser("wait", help="poll availability without claiming", allow_abbrev=False)
-    wait.add_argument("--timeout", type=bounded(1, 30), required=True)
+    wait.add_argument("--timeout", type=bounded(1, 30), required=True, metavar="SECONDS",
+                      help="integer 1..30; for a longer budget, repeat wait")
     return root
 
 
@@ -143,8 +146,11 @@ def execute(args):
 
 
 def emit(payload):
-    # ASCII escaping preserves Unicode even on hosts with a non-UTF-8 console.
-    print(json.dumps({"schema_version": 1, **payload}, ensure_ascii=True))
+    # Output is UTF-8 regardless of locale; backslashreplace keeps lone surrogates as JSON escapes.
+    text = json.dumps({"schema_version": 1, **payload}, ensure_ascii=False) + "\n"
+    sys.stdout.flush()
+    sys.stdout.buffer.write(text.encode("utf-8", "backslashreplace"))
+    sys.stdout.buffer.flush()
 
 
 def main(argv=None):

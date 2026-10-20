@@ -34,7 +34,7 @@ For a result use the same pattern with type `result`, its own key and result bod
 
 ## Poll and recover
 
-`inbox` returns `data.messages`; `wait --timeout 20` returns available `data.message` without reserving it. Claim/ack incoming answers before continuing. Empty inbox/claim and wait timeout exit 5 are ordinary. Limit repeated waits to the assigned work budget. No CLI operation wakes a completed session.
+`inbox` returns `data.messages`; `wait --timeout 20` returns available `data.message` without reserving it. `--timeout` accepts integer seconds 1..30; a larger value is rejected with exit 2, so cover a longer budget by repeating short waits. Claim/ack incoming answers before continuing. Empty inbox/claim and wait timeout exit 5 are ordinary. Limit repeated waits to the assigned work budget. No CLI operation wakes a completed session.
 
 After an uncertain send, repeat its same key and exact input. If lease/ack conflicts, use status and a new claim when available; the old token cannot confirm a replacement lease. Duplicate delivery is possible. Do not blindly repeat external effects.
 
