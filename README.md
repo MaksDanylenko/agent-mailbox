@@ -104,7 +104,7 @@ MESSAGE
   --as claude-session-82 ack --id "$TASK_ID" --lease-token "$LEASE_TOKEN"
 ```
 
-An ack means the task message was accepted. It is not a finished task. Send questions and results separately with `reply --type question` and `reply --type result`, their own stable send keys, and the original task ID. The leader claims and acknowledges a question, asks the human in its current chat, and sends `reply --type answer --reply-to QUESTION_ID` to the teammate. Both sides preserve the thread automatically.
+An ack means the task message was accepted. It is not a finished task. Send questions and results separately with `reply --type question` and `reply --type result`, their own stable send keys, and the current addressed assignment ID (`task_message_id`). The leader claims and acknowledges a question, asks the human in its current chat, and sends `reply --type answer --reply-to QUESTION_ID` to the teammate. Both sides preserve the thread automatically.
 
 A ready-to-run simulated conversation is available without model calls:
 
@@ -185,6 +185,15 @@ python3 scripts/demo.py
 git diff --check
 ```
 
-CI runs the same commands on Python 3.10 and 3.13. Tests use temporary databases. Native validation (`claude plugin validate .`) and live two-product smoke tests are separate from static checks and subprocess demo results; only report them as passed after actually running them.
+CI runs the same commands on Python 3.10 and 3.13. Tests use temporary databases.
+
+Verified locally: 29 CLI tests, the conversation demo, package checks, skill metadata validation, Claude Code 2.1.304 plugin/marketplace validation, and Codex CLI 0.163.0 marketplace discovery. Codex discovery used a per-command configuration override, without installing the plugin or changing global settings:
+
+```sh
+codex -c 'marketplaces.agent-mailbox-local={source_type="local",source="/absolute/path/agent-mailbox"}' \
+  plugin list --marketplace agent-mailbox-local --available --json
+```
+
+The returned available plugin was `agent-mailbox@agent-mailbox-local` version `0.1.0`. These checks do not establish a completed live conversation between Codex and Claude Code; the included demo uses ordinary CLI subprocesses. Native validation, plugin installation, and live-agent execution are separate checks.
 
 MIT licensed. Contributions should include tests for observable behavior and keep the runtime dependency-free. Architecture: [docs/architecture.md](docs/architecture.md).
