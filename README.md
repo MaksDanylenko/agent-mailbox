@@ -1,6 +1,6 @@
 # Agent Mailbox: messaging plugin for Codex and Claude Code
 
-[![CI](https://github.com/MaksDanylenko/agent-mailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MaksDanylenko/agent-mailbox/actions/workflows/ci.yml) · [MIT license](LICENSE) · Python 3.10+
+[![CI](https://github.com/mavka-ai/agent-mailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mavka-ai/agent-mailbox/actions/workflows/ci.yml) · [MIT license](LICENSE) · Python 3.10+
 
 Agent Mailbox is an open-source plugin for local agent-to-agent messaging between **Codex and Claude Code**. A shared SQLite mailbox, Python CLI, and coordination skills let sessions exchange tasks, questions, answers, and results on the same computer.
 
@@ -22,7 +22,7 @@ Python 3.10 or newer, Git, and a local filesystem. The runtime has no third-part
 ## Quickstart
 
 ```sh
-git clone https://github.com/MaksDanylenko/agent-mailbox.git
+git clone https://github.com/mavka-ai/agent-mailbox.git
 cd agent-mailbox
 python3 --version
 ./bin/agent-mailbox --help
@@ -215,7 +215,7 @@ No. `ack` confirms message acceptance. The teammate sends a separate `result` me
 - [CLI contract and delivery semantics](docs/design.md#complete-cli-contract): command arguments, JSON fields, exit codes, leases, and retry rules.
 - [First teammate startup packet](examples/startup-teammate.json) and [replacement session packet](examples/startup-successor.json): paths, addresses, current assignment, and original task references.
 - [Setup skill](skills/mailbox-setup/SKILL.md), [lead skill](skills/mailbox-lead/SKILL.md), and [teammate skill](skills/mailbox-teammate/SKILL.md): workflows bundled in the plugin.
-- [Report a bug or ask a usage question](https://github.com/MaksDanylenko/agent-mailbox/issues). Include the CLI version and a minimal example without private task content.
+- [Report a bug or ask a usage question](https://github.com/mavka-ai/agent-mailbox/issues). Include the CLI version and a minimal example without private task content.
 
 ## Development
 
